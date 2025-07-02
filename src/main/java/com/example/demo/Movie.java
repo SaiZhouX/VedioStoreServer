@@ -25,4 +25,11 @@ public class Movie {
     private String watchLink;
     @JsonProperty("synopsis")
     private String synopsis;
+
+    public String getFullPosterPath() {
+        if (posterPath != null) {
+            return "/posters/" + posterPath;
+        }
+        return null;
+    }
 }

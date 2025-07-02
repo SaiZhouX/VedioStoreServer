@@ -5,8 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -30,10 +32,13 @@ public class MovieController {
     }
 
     @GetMapping("/movies")
-    public ResponseEntity<List<Movie>> getAllMovies() {
+    public ResponseEntity<List<MovieResponseDto>> getAllMovies() {
         try {
             List<Movie> movies = movieService.loadMovies();
-            return ResponseEntity.ok(movies);
+            List<MovieResponseDto> responseDtos = movies.stream()
+                    .map(MovieResponseDto::new) // 调用带参构造函数
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(responseDtos);
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(null);
@@ -41,10 +46,10 @@ public class MovieController {
     }
 
     @GetMapping("/movies/{title}")
-    public ResponseEntity<Movie> getMovieByTitle(@PathVariable String title) {
+    public ResponseEntity<MovieResponseDto> getMovieByTitle(@PathVariable String title) {
         try {
             Optional<Movie> movie = movieService.findMovieByTitle(title);
-            return movie.map(ResponseEntity::ok)
+            return movie.map(m -> ResponseEntity.ok(new MovieResponseDto(m)))
                     .orElse(ResponseEntity.notFound().build());
         } catch (IOException e) {
             e.printStackTrace();
@@ -125,7 +130,6 @@ public class MovieController {
             if (success) {
                 return ResponseEntity.ok("电影删除成功！");
             } else {
-                // 直接构建 ResponseEntity 对象
                 return new ResponseEntity<>("未找到该电影，删除失败！", HttpStatus.NOT_FOUND);
             }
         } catch (IOException e) {
